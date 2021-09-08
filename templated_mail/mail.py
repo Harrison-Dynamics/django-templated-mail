@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.core import mail
+from django.template.base import TextNode
 from django.template.context import make_context
 from django.template.loader import get_template
-from django.template.loader_tags import BlockNode, ExtendsNode
+from django.template.loader_tags import BlockContext, BlockNode, ExtendsNode, BLOCK_CONTEXT_KEY
 from django.views.generic.base import ContextMixin
 
 
@@ -89,6 +90,12 @@ class BaseEmailMessage(mail.EmailMultiAlternatives, ContextMixin):
         for node in nodelist:
             if isinstance(node, ExtendsNode):
                 parent = node.get_parent(context)
+                
+                if BLOCK_CONTEXT_KEY not in context.render_context:
+                    context.render_context[BLOCK_CONTEXT_KEY] = BlockContext()
+                block_context = context.render_context[BLOCK_CONTEXT_KEY]
+                block_context.add_blocks(node.blocks)
+                
                 blocks.update(self._get_blocks(parent.nodelist, context))
         blocks.update({
             node.name: node for node in nodelist.get_nodes_by_type(BlockNode)
