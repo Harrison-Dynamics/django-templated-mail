@@ -67,7 +67,7 @@ class BaseEmailMessage(mail.EmailMultiAlternatives, ContextMixin):
                 self._process_block(block_node, context)
         self._attach_body()
 
-    def send(self, to, *args, **kwargs):
+    def send(self, to, fail_silently=False, **kwargs):
         self.render()
 
         self.to = to
@@ -78,7 +78,9 @@ class BaseEmailMessage(mail.EmailMultiAlternatives, ContextMixin):
             'from_email', settings.DEFAULT_FROM_EMAIL
         )
 
-        super(BaseEmailMessage, self).send(*args, **kwargs)
+        self.request = None
+
+        super(BaseEmailMessage, self).send(fail_silently=fail_silently)
 
     def _process_block(self, block_node, context):
         attr = self._node_map.get(block_node.name)
